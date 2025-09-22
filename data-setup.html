@@ -1,0 +1,48 @@
+<div class="max-w-7xl mx-auto">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Timetable Setup: Step 3 of 4</h1>
+        <p class="mt-1 text-gray-500">Define your school's subjects, teachers, and class sections.</p>
+    </div>
+    <div id="data-setup-container" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+            <h2 class="text-xl font-semibold mb-4">Subjects</h2>
+            <div class="flex gap-2 mb-4">
+                <input id="new-subject" type="text" placeholder="e.g., Mathematics"
+                    class="block w-full rounded-md border-gray-300">
+                <button id="add-subject-btn"
+                    class="px-4 bg-blue-600 text-white rounded-md font-semibold text-sm hover:bg-blue-700">Add</button>
+            </div>
+            <ul id="subject-list" class="space-y-2"></ul>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+            <h2 class="text-xl font-semibold mb-4">Teachers</h2>
+            <div class="flex gap-2 mb-4">
+                <input id="new-teacher" type="text" placeholder="e.g., Mr. Smith"
+                    class="block w-full rounded-md border-gray-300">
+                <button id="add-teacher-btn"
+                    class="px-4 bg-blue-600 text-white rounded-md font-semibold text-sm hover:bg-blue-700">Add</button>
+            </div>
+            <ul id="teacher-list" class="space-y-2"></ul>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+            <h2 class="text-xl font-semibold mb-4">Classes</h2>
+            <div class="flex gap-2 mb-4">
+                <input id="new-class" type="text" placeholder="e.g., Class 4-A"
+                    class="block w-full rounded-md border-gray-300">
+                <button id="add-class-btn"
+                    class="px-4 bg-blue-600 text-white rounded-md font-semibold text-sm hover:bg-blue-700">Add</button>
+            </div>
+            <ul id="class-list" class="space-y-2"></ul>
+        </div>
+    </div>
+    <div class="mt-8 flex justify-between items-center">
+        <a href="#timings"
+            class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-md shadow-sm text-sm font-medium hover:bg-gray-200">
+            <span class="material-symbols-outlined">arrow_back</span> Back
+        </a>
+        <a href="#class-editor" id="next-btn"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700">
+            Next: Class Editor <span class="material-symbols-outlined">arrow_forward</span>
+        </a>
+    </div>
+</div>

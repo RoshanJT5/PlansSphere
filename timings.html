@@ -1,0 +1,49 @@
+<div class="max-w-7xl mx-auto">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Timetable Setup: Step 2 of 4</h1>
+        <p class="mt-1 text-gray-500">Customize the weekly layout with day-specific settings and individual period
+            timings.</p>
+    </div>
+    <div class="grid grid-cols-1 xl:grid-cols-4 gap-8">
+        <div class="xl:col-span-1 bg-white p-6 rounded-lg shadow-sm border space-y-6">
+            <h2 class="text-xl font-semibold">Default Timings</h2>
+            <p class="text-sm text-gray-500">These are the default values for all days. You can override them in the
+                grid.</p>
+            <div>
+                <label for="start-time" class="block text-sm font-medium text-gray-700">School Start Time</label>
+                <input type="time" id="start-time" value="08:00" class="mt-1 block w-full rounded-md border-gray-300">
+            </div>
+            <div>
+                <label for="period-duration" class="block text-sm font-medium text-gray-700">Period Duration
+                    (minutes)</label>
+                <input type="number" id="period-duration" value="45"
+                    class="mt-1 block w-full rounded-md border-gray-300">
+            </div>
+            <div id="break-duration-container" class="space-y-4 border-t pt-6">
+            </div>
+        </div>
+        <div class="xl:col-span-3 bg-white p-6 rounded-lg shadow-sm border">
+            <h2 class="text-xl font-semibold mb-4">Weekly Layout & Timings</h2>
+            <p class="text-sm text-gray-500 mb-4">Adjust the number of periods or duration for a whole day, or change a
+                single period's duration. Times will update automatically.</p>
+            <div class="overflow-x-auto rounded-lg border">
+                <table id="layout-grid" class="w-full text-center text-sm min-w-[800px]">
+                    <thead id="layout-grid-head">
+                    </thead>
+                    <tbody id="layout-grid-body" class="divide-y">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="mt-8 flex justify-between items-center">
+        <a href="#structure"
+            class="inline-flex items-center gap-2 px-5 py-2-5 bg-gray-100 text-gray-700 rounded-md shadow-sm text-sm font-medium hover:bg-gray-200">
+            <span class="material-symbols-outlined">arrow_back</span> Back
+        </a>
+        <a href="#data-setup" id="next-btn"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700">
+            Next: Core Data <span class="material-symbols-outlined">arrow_forward</span>
+        </a>
+    </div>
+</div>

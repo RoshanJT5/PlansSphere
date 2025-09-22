@@ -1,0 +1,42 @@
+<div class="max-w-7xl mx-auto">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Timetable Setup: Step 4 of 4</h1>
+        <p class="mt-1 text-gray-500">Assign subjects and teachers to each class, and set the periods per week.</p>
+    </div>
+
+    <div id="class-cards-container" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    </div>
+
+    <div class="mt-8 flex justify-between items-center">
+        <a href="#data-setup"
+            class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-md shadow-sm text-sm font-medium hover:bg-gray-200">
+            <span class="material-symbols-outlined">arrow_back</span> Back
+        </a>
+        <button id="generate-btn"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700">
+            <span class="material-symbols-outlined">auto_awesome</span>
+            Generate Timetable
+        </button>
+    </div>
+</div>
+
+<div id="teacher-select-modal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 id="modal-title" class="text-lg font-semibold">Assign Teachers</h3>
+            <button id="modal-close-btn" class="p-1 text-gray-400 hover:text-gray-600 rounded-full">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="modal-body" class="p-4 max-h-60 overflow-y-auto space-y-2">
+        </div>
+        <div class="flex justify-end gap-3 p-4 bg-gray-50 border-t">
+            <button id="modal-cancel-btn"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-300">Cancel</button>
+            <button id="modal-save-btn"
+                class="px-5 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Save
+                Changes</button>
+        </div>
+    </div>
+</div>
