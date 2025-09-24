@@ -121,6 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
     instructors: "instructors",
     classrooms: "classrooms",
     settings: "settings",
+    "nep-feature": "nep-feature",
   };
 
   // --- Logic for Instructor Profile Modal ---
@@ -191,23 +192,50 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     renderBreakInputs();
     numBreaksInput.addEventListener("input", renderBreakInputs);
+
+    // [FIXED] Next button logic to robustly sync Step 1 changes to Step 2
     nextBtn.addEventListener("click", () => {
-      timetableData.structure.workingDays = Array.from(
+      // 1. Get new values from the form
+      const newNumPeriods = parseInt(numPeriodsInput.value, 10);
+      const newWorkingDays = Array.from(
         daysList.querySelectorAll("input:checked")
       ).map((cb) => cb.value);
-      timetableData.structure.numPeriods = parseInt(numPeriodsInput.value, 10);
+
+      // 2. Update the main structure data
+      timetableData.structure.workingDays = newWorkingDays;
+      timetableData.structure.numPeriods = newNumPeriods;
       timetableData.structure.numBreaks = parseInt(numBreaksInput.value, 10);
       timetableData.structure.breaks = Array.from(
         breakConfigContainer.querySelectorAll(".break-after-period")
       ).map((input, i) => ({ afterPeriod: parseInt(input.value, 10) }));
+
+      // 3. Get all days that currently have a layout configuration
+      const allLayoutDays = Object.keys(timetableData.timings.layout);
+
+      // 4. Clean up days that are no longer working days to prevent stale data
+      allLayoutDays.forEach((day) => {
+        if (!newWorkingDays.includes(day)) {
+          delete timetableData.timings.layout[day];
+        }
+      });
+
+      // 5. Update the period count for all *current* working days
+      newWorkingDays.forEach((day) => {
+        if (!timetableData.timings.layout[day]) {
+          timetableData.timings.layout[day] = {};
+        }
+        timetableData.timings.layout[day].numPeriods = newNumPeriods;
+      });
+
+      // 6. Save the fully updated data
       saveData();
     });
   };
 
-  // --- CODE TO Break Add START ---
-
+  // --- Timings Page Logic ---
   const initializeTimingsPage = () => {
     loadData();
+
     const defaultStartTimeInput = document.getElementById("start-time");
     const defaultPeriodDurationInput =
       document.getElementById("period-duration");
@@ -222,192 +250,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const addMinutes = (date, minutes) =>
       new Date(date.getTime() + minutes * 60000);
 
-    const renderBreakDurationInputs = () => {
-      breakDurationContainer.innerHTML =
-        '<h3 class="text-lg font-medium">Default Break Durations</h3>';
-      for (let i = 0; i < timetableData.structure.numBreaks; i++) {
-        const durationInfo = timetableData.timings.breakDurations[i] || {
-          duration: 15,
-        };
-        breakDurationContainer.innerHTML += `
-                  <div>
-                      <label class="block text-sm font-medium text-gray-700">Break ${
-                        i + 1
-                      } Duration (minutes)</label>
-                      <input type="number" value="${
-                        durationInfo.duration
-                      }" data-index="${i}" class="break-duration mt-1 block w-full rounded-md border-gray-300">
-                  </div>`;
-      }
-      breakDurationContainer
-        .querySelectorAll(".break-duration")
-        .forEach((input) => {
-          input.addEventListener("input", updateDataFromUI);
-        });
-    };
+    const updateAndRender = (event) => {
+      const sourceElement = event ? event.target : null;
 
-    const renderLayoutGrid = () => {
-      const { workingDays, breaks } = timetableData.structure;
-
-      gridHead.innerHTML = `<tr class="bg-gray-50"><th class="p-2 font-semibold w-32">Time Slot</th>${workingDays
-        .map((day) => `<th class="p-2 font-semibold">${day}</th>`)
-        .join("")}</tr>`;
-
-      const masterControls = workingDays
-        .map((day) => {
-          const dayLayout = timetableData.timings.layout[day] || {};
-          const numPeriods =
-            dayLayout.numPeriods || timetableData.structure.numPeriods;
-          const periodDuration =
-            dayLayout.periodDuration || timetableData.timings.periodDuration;
-          return `<td class="p-1 space-y-1 bg-gray-50">
-                          <div class="flex items-center"><label class="text-xs mr-1">Periods:</label><input type="number" class="day-periods-override w-12 border-gray-300 rounded-sm p-0.5 text-xs text-center" value="${numPeriods}" data-day="${day}"></div>
-                          <div class="flex items-center"><label class="text-xs mr-1">Duration:</label><input type="number" class="day-duration-override w-12 border-gray-300 rounded-sm p-0.5 text-xs text-center" value="${periodDuration}" data-day="${day}"></div>
-                      </td>`;
-        })
-        .join("");
-      gridHead.innerHTML += `<tr class="border-b"><td class="p-1 font-medium bg-gray-100">Day Controls</td>${masterControls}</tr>`;
-
-      const columns = {};
-      let maxPeriods = 0;
-      const defaultBreakDurations = Array.from(
-        breakDurationContainer.querySelectorAll(".break-duration")
-      ).map((input) => parseInt(input.value, 10));
-
-      workingDays.forEach((day) => {
-        const dayLayout = timetableData.timings.layout[day] || {};
-        const numPeriods =
-          dayLayout.numPeriods || timetableData.structure.numPeriods;
-        if (numPeriods > maxPeriods) maxPeriods = numPeriods;
-
-        columns[day] = [];
-        let currentTime = new Date(
-          `1970-01-01T${defaultStartTimeInput.value}:00`
-        );
-        let breakCounter = 0;
-
-        for (let i = 1; i <= numPeriods; i++) {
-          const periodLayout = (dayLayout.periods || [])[i - 1] || {};
-          const duration =
-            periodLayout.duration ||
-            dayLayout.periodDuration ||
-            parseInt(defaultPeriodDurationInput.value, 10);
-          const isEnabled = periodLayout.enabled !== false;
-
-          const startTime = new Date(currentTime);
-          const endTime = addMinutes(startTime, duration);
-
-          columns[day].push({
-            type: "period",
-            index: i,
-            startTime,
-            endTime,
-            duration,
-            isEnabled,
-          });
-          currentTime = endTime;
-
-          const breakInfo = breaks.find((b) => b.afterPeriod === i);
-          if (breakInfo) {
-            const breakStartTime = new Date(currentTime);
-            const breakDuration = defaultBreakDurations[breakCounter] || 15;
-            const breakEndTime = addMinutes(breakStartTime, breakDuration);
-            columns[day].push({
-              type: "break",
-              index: breakCounter + 1,
-              startTime: breakStartTime,
-              endTime: breakEndTime,
-            });
-            currentTime = breakEndTime;
-            breakCounter++;
-          }
-        }
-      });
-
-      gridBody.innerHTML = "";
-      let periodIndex = 1;
-      let overallCurrentTime = new Date(
-        `1970-01-01T${defaultStartTimeInput.value}:00`
-      );
-
-      while (periodIndex <= maxPeriods) {
-        const row = document.createElement("tr");
-        let hasContentThisRow = false;
-        let currentPeriodDuration = parseInt(
-          defaultPeriodDurationInput.value,
-          10
-        );
-
-        const cells = workingDays
-          .map((day) => {
-            const period = columns[day].find(
-              (p) => p.type === "period" && p.index === periodIndex
-            );
-            if (period) {
-              hasContentThisRow = true;
-              currentPeriodDuration = period.duration; // Use specific duration for time slot calculation
-              return `<td class="p-1">
-                                  <div class="flex items-center justify-center gap-1 bg-white rounded p-1 border">
-                                      <input type="checkbox" data-day="${day}" data-period-index="${
-                period.index
-              }" class="period-checkbox h-4 w-4" ${
-                period.isEnabled ? "checked" : ""
-              }>
-                                      <input type="number" data-day="${day}" data-period-index="${
-                period.index
-              }" value="${
-                period.duration
-              }" class="period-duration w-12 p-0.5 text-xs text-center border-gray-300 rounded-sm">
-                                  </div>
-                              </td>`;
-            }
-            return '<td class="p-1 bg-gray-50"></td>';
-          })
-          .join("");
-
-        if (hasContentThisRow) {
-          const periodStartTime = new Date(overallCurrentTime);
-          const periodEndTime = addMinutes(
-            periodStartTime,
-            currentPeriodDuration
-          );
-          const timeSlot = `${formatTime(periodStartTime)} - ${formatTime(
-            periodEndTime
-          )}`;
-          row.innerHTML = `<td class="p-2 font-bold text-gray-600 bg-gray-50 align-middle">${timeSlot}</td>${cells}`;
-          gridBody.appendChild(row);
-          overallCurrentTime = periodEndTime;
-        }
-
-        // [FIXED] Correctly render the break row after the period row
-        const breakInfo = breaks.find((b) => b.afterPeriod === periodIndex);
-        if (breakInfo) {
-          const breakIndex = breaks.indexOf(breakInfo);
-          const breakDuration = defaultBreakDurations[breakIndex] || 15;
-          const breakStartTime = new Date(overallCurrentTime);
-          const breakEndTime = addMinutes(breakStartTime, breakDuration);
-          const breakTimeSlot = `${formatTime(breakStartTime)} - ${formatTime(
-            breakEndTime
-          )}`;
-          const breakRow = document.createElement("tr");
-          breakRow.innerHTML = `<td class="p-2 font-bold text-blue-800 bg-blue-100 align-middle">${breakTimeSlot}</td><td colspan="${workingDays.length}" class="text-center font-medium text-blue-700 bg-blue-50">Break</td>`;
-          gridBody.appendChild(breakRow);
-          overallCurrentTime = breakEndTime;
-        }
-
-        periodIndex++;
-      }
-    };
-
-    const updateDataFromUI = () => {
+      // --- 1. Read All DOM Inputs and Update Data Object ---
       timetableData.timings.startTime = defaultStartTimeInput.value;
-      timetableData.timings.periodDuration = parseInt(
-        defaultPeriodDurationInput.value,
-        10
-      );
+      timetableData.timings.periodDuration =
+        parseInt(defaultPeriodDurationInput.value, 10) || 0;
       timetableData.timings.breakDurations = Array.from(
         breakDurationContainer.querySelectorAll(".break-duration")
-      ).map((input) => ({ duration: parseInt(input.value, 10) }));
+      ).map((input) => ({ duration: parseInt(input.value, 10) || 0 }));
 
       gridHead
         .querySelectorAll(".day-periods-override, .day-duration-override")
@@ -415,16 +267,11 @@ document.addEventListener("DOMContentLoaded", () => {
           const day = input.dataset.day;
           if (!timetableData.timings.layout[day])
             timetableData.timings.layout[day] = {};
+          const value = parseInt(input.value, 10);
           if (input.classList.contains("day-periods-override")) {
-            timetableData.timings.layout[day].numPeriods = parseInt(
-              input.value,
-              10
-            );
+            timetableData.timings.layout[day].numPeriods = value;
           } else {
-            timetableData.timings.layout[day].periodDuration = parseInt(
-              input.value,
-              10
-            );
+            timetableData.timings.layout[day].periodDuration = value;
           }
         });
 
@@ -439,7 +286,6 @@ document.addEventListener("DOMContentLoaded", () => {
             timetableData.timings.layout[day].periods = [];
           if (!timetableData.timings.layout[day].periods[periodIndex])
             timetableData.timings.layout[day].periods[periodIndex] = {};
-
           if (input.type === "checkbox") {
             timetableData.timings.layout[day].periods[periodIndex].enabled =
               input.checked;
@@ -448,27 +294,205 @@ document.addEventListener("DOMContentLoaded", () => {
               parseInt(input.value, 10);
           }
         });
+
+      // --- 2. Apply Cascading Logic Based on Event Source ---
+      if (sourceElement) {
+        if (sourceElement.id === "period-duration") {
+          const newDefaultDuration = timetableData.timings.periodDuration;
+          timetableData.structure.workingDays.forEach((day) => {
+            if (!timetableData.timings.layout[day])
+              timetableData.timings.layout[day] = {};
+            timetableData.timings.layout[day].periodDuration =
+              newDefaultDuration;
+            const numPeriods =
+              (timetableData.timings.layout[day] || {}).numPeriods ||
+              timetableData.structure.numPeriods;
+            if (!timetableData.timings.layout[day].periods)
+              timetableData.timings.layout[day].periods = [];
+            for (let i = 0; i < numPeriods; i++) {
+              if (!timetableData.timings.layout[day].periods[i])
+                timetableData.timings.layout[day].periods[i] = {};
+              timetableData.timings.layout[day].periods[i].duration =
+                newDefaultDuration;
+            }
+          });
+        } else if (sourceElement.classList.contains("day-duration-override")) {
+          const day = sourceElement.dataset.day;
+          const newDayDuration =
+            timetableData.timings.layout[day].periodDuration;
+          const numPeriods =
+            (timetableData.timings.layout[day] || {}).numPeriods ||
+            timetableData.structure.numPeriods;
+          if (!timetableData.timings.layout[day].periods)
+            timetableData.timings.layout[day].periods = [];
+          for (let i = 0; i < numPeriods; i++) {
+            if (!timetableData.timings.layout[day].periods[i])
+              timetableData.timings.layout[day].periods[i] = {};
+            timetableData.timings.layout[day].periods[i].duration =
+              newDayDuration;
+          }
+        }
+      }
+
+      renderAll();
+    };
+
+    const renderBreakDurationInputs = () => {
+      let html = '<h3 class="text-lg font-medium">Default Break Durations</h3>';
+      for (let i = 0; i < timetableData.structure.numBreaks; i++) {
+        const durationInfo = timetableData.timings.breakDurations[i] || {
+          duration: 15,
+        };
+        html += `
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Break ${
+              i + 1
+            } Duration (minutes)</label>
+            <input type="number" value="${
+              durationInfo.duration
+            }" data-index="${i}" class="break-duration mt-1 block w-full rounded-md border-gray-300">
+          </div>`;
+      }
+      breakDurationContainer.innerHTML = html;
+    };
+
+    const renderLayoutGrid = () => {
+      const {
+        workingDays,
+        numPeriods: defaultNumPeriods,
+        breaks,
+      } = timetableData.structure;
+      const {
+        periodDuration: defaultPeriodDuration,
+        startTime,
+        breakDurations,
+      } = timetableData.timings;
+
+      let headHtml = `<tr class="bg-gray-50"><th class="p-2 font-semibold w-32">Time Slot</th>${workingDays
+        .map((day) => `<th class="p-2 font-semibold">${day}</th>`)
+        .join("")}</tr>`;
+      const dayControlsHtml = workingDays
+        .map((day) => {
+          const dayLayout = timetableData.timings.layout[day] || {};
+          const numPeriods = dayLayout.numPeriods || defaultNumPeriods;
+          const periodDuration =
+            dayLayout.periodDuration || defaultPeriodDuration;
+          return `<td class="p-1 space-y-1 bg-gray-50">
+                  <div class="flex items-center"><label class="text-xs mr-1">Periods:</label><input type="number" class="day-periods-override w-12 border-gray-300 rounded-sm p-0.5 text-xs text-center" value="${numPeriods}" data-day="${day}"></div>
+                  <div class="flex items-center"><label class="text-xs mr-1">Duration:</label><input type="number" class="day-duration-override w-12 border-gray-300 rounded-sm p-0.5 text-xs text-center" value="${periodDuration}" data-day="${day}"></div>
+                </td>`;
+        })
+        .join("");
+      headHtml += `<tr class="border-b"><td class="p-1 font-medium bg-gray-100">Day Controls</td>${dayControlsHtml}</tr>`;
+      gridHead.innerHTML = headHtml;
+
+      let bodyHtml = "";
+      const dailyCurrentTimes = {};
+      workingDays.forEach((day) => {
+        dailyCurrentTimes[day] = new Date(`1970-01-01T${startTime}:00`);
+      });
+
+      const maxPeriods = Math.max(
+        0,
+        ...workingDays.map(
+          (day) =>
+            (timetableData.timings.layout[day] || {}).numPeriods ||
+            defaultNumPeriods
+        )
+      );
+
+      for (let periodNum = 1; periodNum <= maxPeriods; periodNum++) {
+        let periodRowCells = "";
+        let timeSlotHtml = "";
+        let periodExistsInThisRow = false;
+
+        workingDays.forEach((day, dayIndex) => {
+          const dayLayout = timetableData.timings.layout[day] || {};
+          const dayNumPeriods = dayLayout.numPeriods || defaultNumPeriods;
+
+          if (periodNum <= dayNumPeriods) {
+            periodExistsInThisRow = true;
+            const periodStartTime = new Date(dailyCurrentTimes[day]);
+            const periodSpecificLayout =
+              (dayLayout.periods || [])[periodNum - 1] || {};
+            const periodDuration =
+              periodSpecificLayout.duration ||
+              dayLayout.periodDuration ||
+              defaultPeriodDuration;
+            const isEnabled = periodSpecificLayout.enabled !== false;
+            const periodEndTime = addMinutes(periodStartTime, periodDuration);
+
+            if (dayIndex === 0) {
+              timeSlotHtml = `<td class="p-2 font-bold text-gray-600 bg-gray-50 align-middle">${formatTime(
+                periodStartTime
+              )} - ${formatTime(periodEndTime)}</td>`;
+            }
+
+            periodRowCells += `<td class="p-1">
+                                <div class="flex items-center justify-center gap-1 bg-white rounded p-1 border">
+                                  <input type="checkbox" data-day="${day}" data-period-index="${periodNum}" class="period-checkbox h-4 w-4" ${
+              isEnabled ? "checked" : ""
+            }>
+                                  <input type="number" data-day="${day}" data-period-index="${periodNum}" value="${periodDuration}" class="period-duration w-12 p-0.5 text-xs text-center border-gray-300 rounded-sm">
+                                </div>
+                              </td>`;
+            dailyCurrentTimes[day] = periodEndTime;
+          } else {
+            periodRowCells += `<td class="p-1 bg-gray-50"></td>`;
+          }
+        });
+
+        if (periodExistsInThisRow) {
+          bodyHtml += `<tr>${timeSlotHtml}${periodRowCells}</tr>`;
+        }
+
+        const breakInfo = breaks.find((b) => b.afterPeriod === periodNum);
+        if (breakInfo) {
+          const breakIndex = breaks.indexOf(breakInfo);
+          const breakDuration = (breakDurations[breakIndex] || { duration: 15 })
+            .duration;
+          let breakTimeSlotHtml = "";
+
+          workingDays.forEach((day, dayIndex) => {
+            const breakStartTime = new Date(dailyCurrentTimes[day]);
+            const breakEndTime = addMinutes(breakStartTime, breakDuration);
+            if (dayIndex === 0) {
+              breakTimeSlotHtml = `<td class="p-2 font-bold text-blue-800 bg-blue-100 align-middle">${formatTime(
+                breakStartTime
+              )} - ${formatTime(breakEndTime)}</td>`;
+            }
+            dailyCurrentTimes[day] = breakEndTime;
+          });
+
+          bodyHtml += `<tr>
+                          ${breakTimeSlotHtml}
+                          <td colspan="${workingDays.length}" class="p-2"><div class="timetable-cell bg-gray-200 text-gray-600 font-medium h-full flex items-center justify-center rounded-lg">Break</div></td>
+                      </tr>`;
+        }
+      }
+      gridBody.innerHTML = bodyHtml;
+    };
+
+    const renderAll = () => {
+      renderBreakDurationInputs();
       renderLayoutGrid();
     };
 
-    const saveDataAndProceed = () => {
-      updateDataFromUI();
+    // --- Event Listeners ---
+    defaultStartTimeInput.addEventListener("input", updateAndRender);
+    defaultPeriodDurationInput.addEventListener("input", updateAndRender);
+    breakDurationContainer.addEventListener("input", updateAndRender);
+    gridHead.addEventListener("input", updateAndRender);
+    gridBody.addEventListener("input", updateAndRender);
+
+    nextBtn.addEventListener("click", () => {
       saveData();
-    };
+    });
 
     defaultStartTimeInput.value = timetableData.timings.startTime;
     defaultPeriodDurationInput.value = timetableData.timings.periodDuration;
-    renderBreakDurationInputs();
-    renderLayoutGrid();
-
-    defaultStartTimeInput.addEventListener("input", updateDataFromUI);
-    defaultPeriodDurationInput.addEventListener("input", updateDataFromUI);
-    gridHead.addEventListener("change", updateDataFromUI);
-    gridBody.addEventListener("change", updateDataFromUI);
-    nextBtn.addEventListener("click", saveDataAndProceed);
+    renderAll();
   };
-
-  // END OF CODE TO Break Add
 
   const initializeDataSetupPage = () => {
     loadData();
@@ -846,6 +870,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  const initializeNEPFeaturePage = () => {
+    // This function will be called when the hash changes to #nep-feature
+    // Placeholder for NEP-specific logic and UI rendering
+    // No action needed for this step as we are only creating the file
+  };
+
   // --- Core Application Logic ---
   const loadContent = async (page) => {
     pageContent.innerHTML =
@@ -868,6 +898,8 @@ document.addEventListener("DOMContentLoaded", () => {
         initializeClassEditorPage();
       } else if (page === "timetable") {
         initializeTimetablePage();
+      } else if (page === "nep-feature") {
+        initializeNEPFeaturePage();
       }
     } catch (error) {
       pageContent.innerHTML = `<p class="text-center text-red-500">Error: Could not load page. ${error.message}</p>`;
@@ -879,7 +911,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const activeSection = pageToSectionMap[currentPage] || "";
     navLinks.forEach((link) => {
       const linkPage = new URL(link.href).hash.substring(1);
-      if (linkPage === activeSection) {
+      const linkSection = pageToSectionMap[linkPage] || "";
+      if (linkSection === activeSection) {
         link.style.backgroundColor = colors.active.bg;
         link.style.color = colors.active.text;
         link.style.fontWeight = "600";
@@ -896,7 +929,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const currentPage = window.location.hash.substring(1) || "dashboard";
       const activeSection = pageToSectionMap[currentPage] || "";
       const linkPage = new URL(link.href).hash.substring(1);
-      if (linkPage !== activeSection) {
+      const linkSection = pageToSectionMap[linkPage] || "";
+      if (linkSection !== activeSection) {
         link.style.backgroundColor = colors.hover.bg;
         link.style.color = colors.hover.text;
       }
@@ -905,7 +939,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const currentPage = window.location.hash.substring(1) || "dashboard";
       const activeSection = pageToSectionMap[currentPage] || "";
       const linkPage = new URL(link.href).hash.substring(1);
-      if (linkPage !== activeSection) {
+      const linkSection = pageToSectionMap[linkPage] || "";
+      if (linkSection !== activeSection) {
         link.style.backgroundColor = colors.default.bg;
         link.style.color = colors.default.text;
       }

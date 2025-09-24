@@ -34,3 +34,15 @@ body {
 }
 
 /* The .remove-arrows helper style is no longer needed and has been removed. */
+
+/* --- Logo Styling --- */
+.sidebar-logo {
+  width: 50px; /* Slightly larger for more impact */
+  height: auto;
+  transition: transform 0.2s ease-in-out; /* Smooth transition for hover effect */
+}
+
+.sidebar-logo:hover {
+  transform: rotate(10deg) scale(1.1); /* Fun, interactive hover effect */
+  cursor: pointer;
+}
