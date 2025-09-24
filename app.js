@@ -5,10 +5,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Instructor Data (Our simple database) ---
   const instructorsData = {
     "eleanor-vance": {
-      name: "Dr. Eleanor Vance",
+      name: "Dr. Astha Singh",
       department: "Mathematics Dept.",
-      email: "e.vance@example.edu",
-      phone: "(555) 123-4567",
+      email: "astha123@example.edu",
+      phone: "9879123456",
       office: "Room 301, Science Building",
       imgSrc:
         "https://lh3.googleusercontent.com/aida-public/AB6AXuCH6qJDSMphDfcZ8TdnNHuSBNn1Iyna49YKdP--kWNpPvFtcDuYzaUDbdDNx2EK3u1WM5RegF0-xmxAMS8Dlwo3p8WDINnlec1IFIqB-mLpaWtQaEzVR1XGwQYn9IiAUYsY4CvEownXW_NNFnwkSSFGd4ow0ivPi2mI0YtcRKeQHHKw56Fwdjb51m1dveSiMf9LSN6MQyvK5XFoX3hqTaB2cKtINBiKPSn-0_X06-Ok9ZlYKNB9NilnUFLMXrNjEn6ZGD9AdZYgwrg",
@@ -19,10 +19,10 @@ document.addEventListener("DOMContentLoaded", () => {
       ],
     },
     "samuel-reed": {
-      name: "Dr. Samuel Reed",
+      name: "Dr. Atharva Kamble",
       department: "Physics Dept.",
-      email: "s.reed@example.edu",
-      phone: "(555) 234-5678",
+      email: "atharva123@example.edu",
+      phone: "9876543210",
       office: "Room 305, Science Building",
       imgSrc:
         "https://lh3.googleusercontent.com/aida-public/AB6AXuDLUBAuh9N7keG6T6cQ1rj7NTi9QC1J-pW-zzca-yvFzqkhqkTg1_EPe1f0xnEIAFdWcBY3kSGfkL3PGrTn5B8mRYpuTMFqw9nsAszxx8eTNfnhly4x4iNmMthJb2r4m5zrO7vnUKbYuFdaKgwjjIGTgOceKSSwm6xofP6GllytqocOMeXa_aAWziA2aIGvxsmcdQi7EOP-gcVNuWwQdcjgUT_rfoZbe5q5EkDUPnW1L7vcWvqvEQuD-9qDU59IkwOn6dMClvBu68I",
@@ -32,10 +32,10 @@ document.addEventListener("DOMContentLoaded", () => {
       ],
     },
     "olivia-bennett": {
-      name: "Dr. Olivia Bennett",
+      name: "Dr. Shreya Sharma",
       department: "Chemistry Dept.",
-      email: "o.bennett@example.edu",
-      phone: "(555) 345-6789",
+      email: "shreya05@example.edu",
+      phone: "8123456789",
       office: "Room 210, Chemistry Hall",
       imgSrc:
         "https://lh3.googleusercontent.com/aida-public/AB6AXuD3g89ByGvD7t5W1Jtgbg_C_tmvssc5JeXAOBO7QEQ2qp9x_0uOkSz6ViP-k-CRmFDUsknF2WrFSP14g2q-X5UWVjkr3NOoyw1BGCRanlzJOnpvR0RYUCyhmq0MSlsD64QENwDy0M5D6yUYAByJgjgtUtXgauj6LyRyLTw_jovYUvARUdmFW7EVlhUP-N97U33aYBu61I5-npfBrFJax-Ozv3ATC7YsdZftWO4zAGw2-qVv3bCYiKdTk_trET-dtRjLs7FZW8SpXI0",
@@ -47,10 +47,10 @@ document.addEventListener("DOMContentLoaded", () => {
       ],
     },
     "ethan-carter": {
-      name: "Dr. Ethan Carter",
+      name: "Dr. Aditya Jaiswal",
       department: "Biology Dept.",
-      email: "e.carter@example.edu",
-      phone: "(555) 456-7890",
+      email: "aditya21@example.edu",
+      phone: "6344456789",
       office: "Room 112, Life Sciences Building",
       imgSrc:
         "https://lh3.googleusercontent.com/aida-public/AB6AXuCprC3K-q2U0Up7ijK1sNrUXT3502MZH7vIrwRxYJ3qIfmrNEmCltCR3dcjdXgWR7v2Yln7NcfazqTrWF24sC_MP-1Sx7lFiSh4QSpHVh6CsIxERu3_vNaS-7ItqtTpkdYy4Jt6U9b3zG4FPHcUtz5WeVx9vxWccqaXDpsGQ82lxtIfrZEqi5H7_d4KBIcX9GCh-hkivrqQuLmERVESjNRX6QMoJ3zXrkrxdibgDADuJvzjGxr7GhdvQ2WcZJUyvYD8-RJzfE3saXQ",
